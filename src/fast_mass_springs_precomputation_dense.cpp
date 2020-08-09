@@ -16,8 +16,28 @@ bool fast_mass_springs_precomputation_dense(
   Eigen::LLT<Eigen::MatrixXd> & prefactorization)
 {
   /////////////////////////////////////////////////////////////////////////////
-  // Replace with your code
   Eigen::MatrixXd Q = Eigen::MatrixXd::Identity(V.rows(),V.rows());
+  r = Eigen::VectorXd(E.rows());
+	M = Eigen::MatrixXd::Zero(V.rows(),V.rows());
+  A = Eigen::MatrixXd(E.rows(), V.rows());
+	C = Eigen::MatrixXd::Zero(b.size(), V.rows()); 
+
+  for (int i = 0; i < E.rows(); i++) {
+    r[i] = (V.row(E(i, 0)) - V.row(E(i, 1))).norm();
+  }
+
+  for (int i = 0; i < V.rows(); i++) {
+    M(i, i) = m[i];
+  }
+
+  signed_incidence_matrix_dense(V.rows(), E, A);
+
+  for (int i = 0; i < b.size(); i++) {
+    C(i, b(i)) = 1;
+  }
+
+  const double w = 1e10;
+  Q = k * A.transpose() * A + 1 / (delta_t * delta_t) * M + w * C.transpose() * C;
   /////////////////////////////////////////////////////////////////////////////
   prefactorization.compute(Q);
   return prefactorization.info() != Eigen::NumericalIssue;
